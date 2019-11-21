@@ -282,17 +282,17 @@ void building_construction_set_type(building_type type)
             case BUILDING_OLIVE_FARM:
             case BUILDING_VINES_FARM:
             case BUILDING_PIG_FARM:
-                data.required_terrain.meadow = 1;
+//                data.required_terrain.meadow = 1;
                 break;
             case BUILDING_MARBLE_QUARRY:
             case BUILDING_IRON_MINE:
-                data.required_terrain.rock = 1;
+//                data.required_terrain.rock = 1;
                 break;
             case BUILDING_TIMBER_YARD:
-                data.required_terrain.tree = 1;
+//                data.required_terrain.tree = 1;
                 break;
             case BUILDING_CLAY_PIT:
-                data.required_terrain.water = 1;
+//                data.required_terrain.water = 1;
                 break;
             case BUILDING_GATEHOUSE:
             case BUILDING_TRIUMPHAL_ARCH:
@@ -506,16 +506,16 @@ void building_construction_place(void)
         city_warning_show(WARNING_OUT_OF_MONEY);
         return;
     }
-    if (type >= BUILDING_LARGE_TEMPLE_CERES && type <= BUILDING_LARGE_TEMPLE_VENUS && city_resource_count(RESOURCE_MARBLE) < 2) {
+/*    if (type >= BUILDING_LARGE_TEMPLE_CERES && type <= BUILDING_LARGE_TEMPLE_VENUS && city_resource_count(RESOURCE_MARBLE) < 2 && 0) {
         map_property_clear_constructing_and_deleted();
         city_warning_show(WARNING_MARBLE_NEEDED_LARGE_TEMPLE);
         return;
     }
-    if (type == BUILDING_ORACLE && city_resource_count(RESOURCE_MARBLE) < 2) {
+    if (type == BUILDING_ORACLE && city_resource_count(RESOURCE_MARBLE) < 2 && 0) {
         map_property_clear_constructing_and_deleted();
         city_warning_show(WARNING_MARBLE_NEEDED_ORACLE);
         return;
-    }
+    }*/
     if (type != BUILDING_CLEAR_LAND && has_nearby_enemy(x_start, y_start, x_end, y_end)) {
         if (type == BUILDING_WALL || type == BUILDING_ROAD || type == BUILDING_AQUEDUCT) {
             game_undo_restore_map(0);
@@ -604,7 +604,8 @@ void building_construction_place(void)
         return;
     }
     if ((type >= BUILDING_LARGE_TEMPLE_CERES && type <= BUILDING_LARGE_TEMPLE_VENUS) || type == BUILDING_ORACLE) {
-        building_warehouses_remove_resource(RESOURCE_MARBLE, 2);
+//        building_warehouses_remove_resource(RESOURCE_MARBLE, 2);
+//        okokok;
     }
     formation_move_herds_away(x_end, y_end);
     city_finance_process_construction(placement_cost);
