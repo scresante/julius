@@ -181,7 +181,7 @@ void map_water_supply_update_reservoir_fountain(void)
     for (int i = 0; i < total_reservoirs; i++) {
         building *b = building_get(reservoirs[i]);
         if (b->has_water_access) {
-            map_terrain_add_with_radius(b->x, b->y, 3, 10, TERRAIN_RESERVOIR_RANGE);
+            map_terrain_add_with_radius(b->x, b->y, 3, 40, TERRAIN_RESERVOIR_RANGE);
         }
     }
     // fountains
