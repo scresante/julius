@@ -11,6 +11,7 @@
 #define MAX_PROGRESS_RAW 200
 #define MAX_PROGRESS_WORKSHOP 400
 #define INFINITE 10000
+#define HACK_RAW_PRODUCTION 1
 
 int building_is_farm(building_type type)
 {
@@ -42,6 +43,13 @@ void building_industry_update_production(void)
             continue;
         }
         b->data.industry.has_raw_materials = 0;
+//        if (HACK_RAW_PRODUCTION) {
+//            b->data.industry.progress = max_progress(b);
+//            continue;
+//        }
+        if (HACK_RAW_PRODUCTION) {
+            b->data.industry.progress += 50;
+        }
         if (b->houses_covered <= 0 || b->num_workers <= 0) {
             continue;
         }
