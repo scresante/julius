@@ -24,6 +24,9 @@
 #include "window/city.h"
 #include "window/editor/empire.h"
 
+#include "building/construction.h"
+#include "building/construction_building.h"
+
 static struct {
     int is_cheating;
 } data;
@@ -159,7 +162,7 @@ static void input_number(int number)
     }
 }
 
-void hotkey_character(int c, int with_ctrl, int with_alt)
+void hotkey_character(int c, int with_ctrl, int with_alt, int with_shift)
 {
     if (with_ctrl && c == 'a') {
         editor_toggle_battle_info();
@@ -191,7 +194,40 @@ void hotkey_character(int c, int with_ctrl, int with_alt)
         return;
     }
 
+    if (with_shift) {
+        switch(c) {
+            case 'e':
+                show_overlay(OVERLAY_EDUCATION);
+                break;
+            case'f':
+                show_overlay(OVERLAY_FOOD_STOCKS);
+                break;
+        }
+        return;
+    }
+
+/*
+show_overlay(OVERLAY_NATIVE);
+show_overlay(OVERLAY_THEATER);
+show_overlay(OVERLAY_AMPHITHEATER);
+show_overlay(OVERLAY_COLOSSEUM);
+show_overlay(OVERLAY_HIPPODROME);
+show_overlay(OVERLAY_SCHOOL);
+show_overlay(OVERLAY_LIBRARY);
+show_overlay(OVERLAY_ACADEMY);
+show_overlay(OVERLAY_BARBER);
+show_overlay(OVERLAY_BATHHOUSE);
+show_overlay(OVERLAY_CLINIC);
+show_overlay(OVERLAY_HOSPITAL);
+show_overlay(OVERLAY_TAX_INCOME);
+show_overlay(OVERLAY_DESIRABILITY);
+*/
     switch (c) {
+        case 'r':
+//            building_type type;
+//            building_type type = BUILDING_ROAD;
+//            building_construction_set_type(type);
+            break;
         case '[':
             change_game_speed(1);
             break;
@@ -203,6 +239,9 @@ void hotkey_character(int c, int with_ctrl, int with_alt)
             break;
         case 'p':
             toggle_pause();
+            break;
+        case 'e':
+            show_overlay(OVERLAY_ENTERTAINMENT);
             break;
         case 'f':
             show_overlay(OVERLAY_FIRE);
