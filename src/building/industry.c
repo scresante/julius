@@ -43,19 +43,15 @@ void building_industry_update_production(void)
             continue;
         }
         b->data.industry.has_raw_materials = 0;
-//        if (HACK_RAW_PRODUCTION) {
-//            b->data.industry.progress = max_progress(b);
-//            continue;
-//        }
         if (HACK_RAW_PRODUCTION) {
             b->data.industry.progress += 50;
         }
-        if (b->houses_covered <= 0 || b->num_workers <= 0) {
-            continue;
-        }
-        if (b->subtype.workshop_type && !b->loads_stored) {
-            continue;
-        }
+//        if (b->houses_covered <= 0 || b->num_workers <= 0) {
+//            continue;
+//        }
+//        if (b->subtype.workshop_type && !b->loads_stored) {
+//            continue;
+//        }
         if (b->data.industry.curse_days_left) {
             b->data.industry.curse_days_left--;
         } else {
@@ -63,9 +59,9 @@ void building_industry_update_production(void)
                 b->data.industry.blessing_days_left--;
             }
             if (b->type == BUILDING_MARBLE_QUARRY) {
-                b->data.industry.progress += b->num_workers / 2;
+                b->data.industry.progress += b->num_workers * 2;
             } else {
-                b->data.industry.progress += b->num_workers;
+                b->data.industry.progress += b->num_workers * 2;
             }
             if (b->data.industry.blessing_days_left && building_is_farm(b->type)) {
                 b->data.industry.progress += b->num_workers;
