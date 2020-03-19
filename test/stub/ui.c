@@ -14,10 +14,10 @@ int window_is(window_id id)
 void window_invalidate(void)
 {}
 
-void window_logo_show(void)
+void window_logo_show(int show_patch_message)
 {}
 
-void window_main_menu_show(void)
+void window_main_menu_show(int restart_music)
 {}
 
 void window_mission_end_show_fired(void)

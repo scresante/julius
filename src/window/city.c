@@ -1,6 +1,8 @@
 #include "city.h"
 
+#include "building/construction.h"
 #include "city/message.h"
+#include "city/victory.h"
 #include "city/view.h"
 #include "game/state.h"
 #include "game/time.h"
@@ -31,7 +33,7 @@ static int center_in_city(int element_width_pixels)
 
 static void draw_paused_and_time_left(void)
 {
-    if (scenario_criteria_time_limit_enabled()) {
+    if (scenario_criteria_time_limit_enabled() && !city_victory_has_won()) {
         int years;
         if (scenario_criteria_max_year() <= game_time_year() + 1) {
             years = 0;
@@ -42,7 +44,7 @@ static void draw_paused_and_time_left(void)
         label_draw(1, 25, 15, 1);
         int width = lang_text_draw(6, 2, 6, 29, FONT_NORMAL_BLACK);
         text_draw_number(total_months, '@', " ", 6 + width, 29, FONT_NORMAL_BLACK);
-    } else if (scenario_criteria_survival_enabled()) {
+    } else if (scenario_criteria_survival_enabled() && !city_victory_has_won()) {
         int years;
         if (scenario_criteria_max_year() <= game_time_year() + 1) {
             years = 0;
@@ -66,8 +68,10 @@ static void draw_foreground(void)
     widget_top_menu_draw(0);
     window_city_draw();
     widget_sidebar_draw_foreground();
-    draw_paused_and_time_left();
-    widget_city_draw_construction_cost();
+    if (window_is(WINDOW_CITY) || window_is(WINDOW_CITY_MILITARY)) {
+        draw_paused_and_time_left();
+    }
+    widget_city_draw_construction_cost_and_size();
     if (window_is(WINDOW_CITY)) {
         city_message_process_queue();
     }
@@ -83,11 +87,13 @@ static void draw_foreground_military(void)
 
 static void handle_mouse(const mouse *m)
 {
-    if (widget_top_menu_handle_mouse(m)) {
-        return;
-    }
-    if (widget_sidebar_handle_mouse(m)) {
-        return;
+    if (!building_construction_in_progress()) {
+        if (widget_top_menu_handle_mouse(m)) {
+            return;
+        }
+        if (widget_sidebar_handle_mouse(m)) {
+            return;
+        }
     }
     widget_city_handle_mouse(m);
 }

@@ -19,26 +19,26 @@
 static void button_request(int id, int param2);
 
 static generic_button buttons[] = {
-    {20, 42, 310, 67, GB_IMMEDIATE, button_request, button_none, 0, 0},
-    {20, 72, 310, 97, GB_IMMEDIATE, button_request, button_none, 1, 0},
-    {20, 102, 310, 127, GB_IMMEDIATE, button_request, button_none, 2, 0},
-    {20, 132, 310, 157, GB_IMMEDIATE, button_request, button_none, 3, 0},
-    {20, 162, 310, 187, GB_IMMEDIATE, button_request, button_none, 4, 0},
-    {20, 192, 310, 217, GB_IMMEDIATE, button_request, button_none, 5, 0},
-    {20, 222, 310, 247, GB_IMMEDIATE, button_request, button_none, 6, 0},
-    {20, 252, 310, 277, GB_IMMEDIATE, button_request, button_none, 7, 0},
-    {20, 282, 310, 307, GB_IMMEDIATE, button_request, button_none, 8, 0},
-    {20, 312, 310, 337, GB_IMMEDIATE, button_request, button_none, 9, 0},
-    {320, 42, 610, 67, GB_IMMEDIATE, button_request, button_none, 10, 0},
-    {320, 72, 610, 97, GB_IMMEDIATE, button_request, button_none, 11, 0},
-    {320, 102, 610, 127, GB_IMMEDIATE, button_request, button_none, 12, 0},
-    {320, 132, 610, 157, GB_IMMEDIATE, button_request, button_none, 13, 0},
-    {320, 162, 610, 187, GB_IMMEDIATE, button_request, button_none, 14, 0},
-    {320, 192, 610, 217, GB_IMMEDIATE, button_request, button_none, 15, 0},
-    {320, 222, 610, 247, GB_IMMEDIATE, button_request, button_none, 16, 0},
-    {320, 252, 610, 277, GB_IMMEDIATE, button_request, button_none, 17, 0},
-    {320, 282, 610, 307, GB_IMMEDIATE, button_request, button_none, 18, 0},
-    {320, 312, 610, 337, GB_IMMEDIATE, button_request, button_none, 19, 0},
+    {20, 42, 290, 25, button_request, button_none, 0, 0},
+    {20, 72, 290, 25, button_request, button_none, 1, 0},
+    {20, 102, 290, 25, button_request, button_none, 2, 0},
+    {20, 132, 290, 25, button_request, button_none, 3, 0},
+    {20, 162, 290, 25, button_request, button_none, 4, 0},
+    {20, 192, 290, 25, button_request, button_none, 5, 0},
+    {20, 222, 290, 25, button_request, button_none, 6, 0},
+    {20, 252, 290, 25, button_request, button_none, 7, 0},
+    {20, 282, 290, 25, button_request, button_none, 8, 0},
+    {20, 312, 290, 25, button_request, button_none, 9, 0},
+    {320, 42, 290, 25, button_request, button_none, 10, 0},
+    {320, 72, 290, 25, button_request, button_none, 11, 0},
+    {320, 102, 290, 25, button_request, button_none, 12, 0},
+    {320, 132, 290, 25, button_request, button_none, 13, 0},
+    {320, 162, 290, 25, button_request, button_none, 14, 0},
+    {320, 192, 290, 25, button_request, button_none, 15, 0},
+    {320, 222, 290, 25, button_request, button_none, 16, 0},
+    {320, 252, 290, 25, button_request, button_none, 17, 0},
+    {320, 282, 290, 25, button_request, button_none, 18, 0},
+    {320, 312, 290, 25, button_request, button_none, 19, 0},
 };
 
 static int focus_button_id;
@@ -72,9 +72,9 @@ static void draw_foreground(void)
         if (request.resource) {
             text_draw_number(request.year, '+', " ", x + 20, y + 6, FONT_NORMAL_BLACK);
             lang_text_draw_year(scenario_property_start_year() + request.year, x + 80, y + 6, FONT_NORMAL_BLACK);
-            int width = text_draw_number(request.amount, '@', " ", x + 150, y + 6, FONT_NORMAL_BLACK);
+            int width = text_draw_number(request.amount, '@', " ", x + 180, y + 6, FONT_NORMAL_BLACK);
             int offset = request.resource + resource_image_offset(request.resource, RESOURCE_IMAGE_ICON);
-            image_draw(image_group(GROUP_EDITOR_RESOURCE_ICONS) + offset, x + 160 + width, y + 3);
+            image_draw(image_group(GROUP_EDITOR_RESOURCE_ICONS) + offset, x + 190 + width, y + 3);
         } else {
             lang_text_draw_centered(44, 23, x, y + 6, 290, FONT_NORMAL_BLACK);
         }
@@ -85,7 +85,7 @@ static void draw_foreground(void)
 
 static void handle_mouse(const mouse *m)
 {
-    if (m->right.went_down) {
+    if (m->right.went_up) {
         window_editor_attributes_show();
     } else {
         generic_buttons_handle_mouse(mouse_in_dialog(m), 0, 0, buttons, 20, &focus_button_id);

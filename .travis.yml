@@ -1,7 +1,6 @@
 language: c
 
-matrix:
-  # Note: If you add a build here or change the order, you need to update the CI badges in README.md as well!
+jobs:
   include:
   - os: linux
     compiler: gcc
@@ -16,7 +15,6 @@ matrix:
     dist: xenial # Oldest still-supported LTS right now against which the AppImage is built. Update this to the next LTS when support drops.
     name: Linux AppImage
     compiler: gcc
-    sudo: require
     env: BUILD_TARGET=appimage DEPLOY=appimage
     services:
       - docker

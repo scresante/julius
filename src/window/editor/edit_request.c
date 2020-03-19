@@ -1,5 +1,6 @@
 #include "edit_request.h"
 
+#include "game/resource.h"
 #include "graphics/button.h"
 #include "graphics/generic_button.h"
 #include "graphics/graphics.h"
@@ -24,13 +25,13 @@ static void button_delete(int param1, int param2);
 static void button_save(int param1, int param2);
 
 static generic_button buttons[] = {
-    {30, 152, 90, 177, GB_IMMEDIATE, button_year, button_none},
-    {330, 152, 410, 177, GB_IMMEDIATE, button_amount, button_none},
-    {430, 152, 530, 177, GB_IMMEDIATE, button_resource, button_none},
-    {70, 190, 210, 215, GB_IMMEDIATE, button_deadline_years, button_none},
-    {400, 190, 480, 215, GB_IMMEDIATE, button_favor, button_none},
-    {10, 234, 260, 259, GB_IMMEDIATE, button_delete, button_none},
-    {300, 234, 400, 259, GB_IMMEDIATE, button_save, button_none}
+    {30, 152, 60, 25, button_year, button_none},
+    {330, 152, 80, 25, button_amount, button_none},
+    {430, 152, 100, 25, button_resource, button_none},
+    {70, 190, 140, 25, button_deadline_years, button_none},
+    {400, 190, 80, 25, button_favor, button_none},
+    {10, 234, 250, 25, button_delete, button_none},
+    {300, 234, 100, 25, button_save, button_none}
 };
 
 static struct {
@@ -87,7 +88,7 @@ static void draw_foreground(void)
 
 static void handle_mouse(const mouse *m)
 {
-    if (m->right.went_down) {
+    if (m->right.went_up) {
         button_save(0, 0);
     } else {
         generic_buttons_handle_mouse(mouse_in_dialog(m), 0, 0, buttons, 7, &data.focus_button_id);
@@ -109,16 +110,28 @@ static void set_amount(int value)
 }
 static void button_amount(int param1, int param2)
 {
-    window_numeric_input_show(screen_dialog_offset_x() + 190, screen_dialog_offset_y() + 50, 3, 999, set_amount);
+    int max_amount = 999;
+    int max_digits = 3;
+    if (data.request.resource == RESOURCE_DENARII) {
+        max_amount = 30000;
+        max_digits = 5;
+    }
+    window_numeric_input_show(
+        screen_dialog_offset_x() + 190, screen_dialog_offset_y() + 50,
+        max_digits, max_amount, set_amount
+    );
 }
 
 static void set_resource(int value)
 {
     data.request.resource = value;
+    if (data.request.amount > 999) {
+        data.request.amount = 999;
+    }
 }
 static void button_resource(int param1, int param2)
 {
-    window_select_list_show(screen_dialog_offset_x() + 210, screen_dialog_offset_y() + 40, 23, 16, set_resource);
+    window_select_list_show(screen_dialog_offset_x() + 210, screen_dialog_offset_y() + 40, 23, 17, set_resource);
 }
 
 static void set_deadline_years(int value)

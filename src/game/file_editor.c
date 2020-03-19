@@ -58,7 +58,6 @@ void game_file_editor_clear_data(void)
     game_state_init();
     game_animation_init();
     sound_city_init();
-    sound_music_reset();
     building_menu_enable_all();
     building_clear_all();
     building_storage_clear_all();
@@ -105,7 +104,7 @@ static void create_blank_map(int size)
 
 static void prepare_map_for_editing(void)
 {
-    image_load_climate(scenario_property_climate(), 1);
+    image_load_climate(scenario_property_climate(), 1, 0);
 
     empire_load(1, scenario_empire_id());
     empire_object_init_cities();
@@ -124,10 +123,11 @@ static void prepare_map_for_editing(void)
     map_tiles_update_all_plazas();
     map_tiles_update_all_walls();
     map_tiles_update_all_aqueducts(0);
-    map_natives_init();
+    map_natives_init_editor();
     map_routing_update_all();
 
     city_view_init();
+    game_state_unpause();
 }
 
 void game_file_editor_create_scenario(int size)

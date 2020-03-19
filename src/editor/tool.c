@@ -97,6 +97,9 @@ int editor_tool_is_in_use(void)
 
 void editor_tool_start_use(const map_tile *tile)
 {
+    if (!data.active) {
+        return;
+    }
     data.build_in_progress = 1;
     data.start_elevation = map_elevation_at(tile->grid_offset);
     data.start_tile = *tile;
@@ -281,6 +284,7 @@ void editor_tool_update_use(const map_tile *tile)
             break;
     }
 
+    scenario_editor_updated_terrain();
     widget_minimap_invalidate();
 }
 
@@ -322,16 +326,20 @@ static void place_building(const map_tile *tile)
 {
     int image_id;
     int size;
+    building_type type;
     switch (data.type) {
         case TOOL_NATIVE_HUT:
+            type = BUILDING_NATIVE_HUT;
             image_id = image_group(GROUP_EDITOR_BUILDING_NATIVE) + (random_byte() & 1);
             size = 1;
             break;
         case TOOL_NATIVE_CENTER:
+            type = BUILDING_NATIVE_MEETING;
             image_id = image_group(GROUP_EDITOR_BUILDING_NATIVE) + 2;
             size = 2;
             break;
         case TOOL_NATIVE_FIELD:
+            type = BUILDING_NATIVE_CROPS;
             image_id = image_group(GROUP_EDITOR_BUILDING_CROPS);
             size = 1;
             break;
@@ -340,7 +348,9 @@ static void place_building(const map_tile *tile)
     }
 
     if (editor_tool_can_place_building(tile, size * size, 0)) {
-        map_building_tiles_add(0, tile->x, tile->y, size, image_id, TERRAIN_BUILDING);
+        building *b = building_create(type, tile->x, tile->y);
+        map_building_tiles_add(b->id, tile->x, tile->y, size, image_id, TERRAIN_BUILDING);
+        scenario_editor_updated_terrain();
     } else {
         city_warning_show(WARNING_EDITOR_CANNOT_PLACE);
     }
@@ -357,6 +367,8 @@ static void update_terrain_after_elevation_changes(void)
     map_tiles_update_all_rocks();
     map_tiles_update_all_empty_land();
     map_tiles_update_all_meadow();
+
+    scenario_editor_updated_terrain();
 }
 
 static void place_access_ramp(const map_tile *tile)
@@ -373,6 +385,7 @@ static void place_access_ramp(const map_tile *tile)
         map_building_tiles_add(0, tile->x, tile->y, 2, image_group(GROUP_TERRAIN_ACCESS_RAMP) + orientation, TERRAIN_ACCESS_RAMP);
 
         update_terrain_after_elevation_changes();
+        scenario_editor_updated_terrain();
     } else {
         city_warning_show(WARNING_EDITOR_CANNOT_PLACE);
     }
@@ -380,7 +393,9 @@ static void place_access_ramp(const map_tile *tile)
 
 static void place_road(const map_tile *start_tile, const map_tile *end_tile)
 {
-    building_construction_place_road(0, start_tile->x, start_tile->y, end_tile->x, end_tile->y);
+    if (building_construction_place_road(0, start_tile->x, start_tile->y, end_tile->x, end_tile->y)) {
+        scenario_editor_updated_terrain();
+    }
 }
 
 void editor_tool_end_use(const map_tile *tile)

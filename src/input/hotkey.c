@@ -19,7 +19,9 @@
 #include "scenario/invasion.h"
 #include "window/advisors.h"
 #include "window/building_info.h"
+#include "window/file_dialog.h"
 #include "window/numeric_input.h"
+#include "window/plain_message_dialog.h"
 #include "window/popup_dialog.h"
 #include "window/city.h"
 #include "window/editor/empire.h"
@@ -159,10 +161,38 @@ static void input_number(int number)
     }
 }
 
-void hotkey_character(int c, int with_ctrl, int with_alt, int with_shift)
+static void load_file(void)
 {
-    if (with_ctrl && c == 'a') {
-        editor_toggle_battle_info();
+    if (window_is(WINDOW_EDITOR_MAP)) {
+        window_file_dialog_show(FILE_TYPE_SCENARIO, FILE_DIALOG_LOAD);
+    } else if (window_is(WINDOW_CITY) || window_is(WINDOW_MAIN_MENU)) {
+        window_file_dialog_show(FILE_TYPE_SAVED_GAME, FILE_DIALOG_LOAD);
+    }
+}
+
+static void save_file(void)
+{
+    if (window_is(WINDOW_EDITOR_MAP)) {
+        window_file_dialog_show(FILE_TYPE_SCENARIO, FILE_DIALOG_SAVE);
+    } else if (window_is(WINDOW_CITY)) {
+        window_file_dialog_show(FILE_TYPE_SAVED_GAME, FILE_DIALOG_SAVE);
+    }
+}
+
+void hotkey_character(int c, int with_ctrl, int with_alt)
+{
+    if (with_ctrl) {
+        switch (c) {
+            case 'a':
+                editor_toggle_battle_info();
+                break;
+            case 'o':
+                load_file();
+                break;
+            case 's':
+                save_file();
+                break;
+        }
         return;
     }
     if (with_alt) {
@@ -266,29 +296,50 @@ void hotkey_character(int c, int with_ctrl, int with_alt, int with_shift)
             show_advisor(ADVISOR_FINANCIAL);
             break;
         case '=':
+        case '+':
             show_advisor(ADVISOR_CHIEF);
             break;
     }
 }
 
-void hotkey_left(void)
+void hotkey_left_press(void)
 {
-    scroll_arrow_left();
+    scroll_arrow_left(1);
 }
 
-void hotkey_right(void)
+void hotkey_right_press(void)
 {
-    scroll_arrow_right();
+    scroll_arrow_right(1);
 }
 
-void hotkey_up(void)
+void hotkey_up_press(void)
 {
-    scroll_arrow_up();
+    scroll_arrow_up(1);
 }
 
-void hotkey_down(void)
+void hotkey_down_press(void)
 {
-    scroll_arrow_down();
+    scroll_arrow_down(1);
+}
+
+void hotkey_left_release(void)
+{
+    scroll_arrow_left(0);
+}
+
+void hotkey_right_release(void)
+{
+    scroll_arrow_right(0);
+}
+
+void hotkey_up_release(void)
+{
+    scroll_arrow_up(0);
+}
+
+void hotkey_down_release(void)
+{
+    scroll_arrow_down(0);
 }
 
 void hotkey_home(void)
@@ -330,10 +381,17 @@ void hotkey_page_down(void)
     change_game_speed(1);
 }
 
-void hotkey_enter(void)
+void hotkey_enter(int with_alt)
 {
+    if (with_alt) {
+        system_set_fullscreen(!setting_fullscreen());
+        return;
+    }
+
     if (window_is(WINDOW_POPUP_DIALOG)) {
         window_popup_dialog_confirm();
+    } else if (window_is(WINDOW_PLAIN_MESSAGE_DIALOG)) {
+        window_plain_message_dialog_accept();
     } else if (window_is(WINDOW_NUMERIC_INPUT)) {
         window_numeric_input_accept();
     }
@@ -358,25 +416,25 @@ static void handle_bookmark(int number, int with_modifier)
     }
 }
 
-static void take_screenshot(void)
+static void take_screenshot(int full_city)
 {
-    graphics_save_screenshot();
+    graphics_save_screenshot(full_city);
 }
 
-void hotkey_func(int f_number, int with_modifier)
+void hotkey_func(int f_number, int with_any_modifier, int with_ctrl)
 {
     switch (f_number) {
         case 1:
         case 2:
         case 3:
         case 4:
-            handle_bookmark(f_number - 1, with_modifier);
+            handle_bookmark(f_number - 1, with_any_modifier);
             break;
         case 5: system_center(); break;
         case 6: system_set_fullscreen(!setting_fullscreen()); break;
         case 7: system_resize(640, 480); break;
         case 8: system_resize(800, 600); break;
         case 9: system_resize(1024, 768); break;
-        case 12: take_screenshot(); break;
+        case 12: take_screenshot(with_ctrl); break;
     }
 }

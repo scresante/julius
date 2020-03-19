@@ -6,7 +6,6 @@
 #include "graphics/lang_text.h"
 #include "graphics/panel.h"
 #include "graphics/window.h"
-#include "window/advisor/labor.h"
 
 #define MIN_DIALOG_WIDTH 320
 
@@ -19,16 +18,16 @@ static struct {
 } data;
 
 static generic_button priority_buttons[] = {
-    {180, 256, 460, 281, GB_IMMEDIATE, button_set_priority, button_none, 0, 0}, // no prio
-    {178, 221, 205, 248, GB_IMMEDIATE, button_set_priority, button_none, 1, 0},
-    {210, 221, 237, 248, GB_IMMEDIATE, button_set_priority, button_none, 2, 0},
-    {242, 221, 269, 248, GB_IMMEDIATE, button_set_priority, button_none, 3, 0},
-    {274, 221, 301, 248, GB_IMMEDIATE, button_set_priority, button_none, 4, 0},
-    {306, 221, 333, 248, GB_IMMEDIATE, button_set_priority, button_none, 5, 0},
-    {338, 221, 365, 248, GB_IMMEDIATE, button_set_priority, button_none, 6, 0},
-    {370, 221, 397, 248, GB_IMMEDIATE, button_set_priority, button_none, 7, 0},
-    {402, 221, 429, 248, GB_IMMEDIATE, button_set_priority, button_none, 8, 0},
-    {434, 221, 461, 248, GB_IMMEDIATE, button_set_priority, button_none, 9, 0},
+    {180, 256, 280, 25, button_set_priority, button_none, 0, 0}, // no prio
+    {178, 221, 27, 27, button_set_priority, button_none, 1, 0},
+    {210, 221, 27, 27, button_set_priority, button_none, 2, 0},
+    {242, 221, 27, 27, button_set_priority, button_none, 3, 0},
+    {274, 221, 27, 27, button_set_priority, button_none, 4, 0},
+    {306, 221, 27, 27, button_set_priority, button_none, 5, 0},
+    {338, 221, 27, 27, button_set_priority, button_none, 6, 0},
+    {370, 221, 27, 27, button_set_priority, button_none, 7, 0},
+    {402, 221, 27, 27, button_set_priority, button_none, 8, 0},
+    {434, 221, 27, 27, button_set_priority, button_none, 9, 0},
 };
 
 static void init(int category)
@@ -52,9 +51,9 @@ static int get_dialog_width(void)
 
 static void draw_background(void)
 {
-    graphics_in_dialog();
+    window_draw_underlying_window();
 
-    window_advisor_labor_draw_dialog_background();
+    graphics_in_dialog();
 
     int dialog_width = get_dialog_width();
     int dialog_x = 160 - (dialog_width - MIN_DIALOG_WIDTH) / 2;
@@ -98,7 +97,7 @@ static void draw_foreground(void)
 static void handle_mouse(const mouse *m)
 {
     if (m->right.went_up) {
-        window_advisors_show();
+        window_go_back();
     } else {
         generic_buttons_handle_mouse(mouse_in_dialog(m), 0, 0, priority_buttons, 1 + data.max_items, &data.focus_button_id);
     }
@@ -107,7 +106,7 @@ static void handle_mouse(const mouse *m)
 static void button_set_priority(int new_priority, int param2)
 {
     city_labor_set_priority(data.category, new_priority);
-    window_advisors_show();
+    window_go_back();
 }
 
 static void get_tooltip(tooltip_context *c)

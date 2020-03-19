@@ -99,7 +99,7 @@ static void advance_month(void)
     city_festival_update();
     tutorial_on_month_tick();
     if (setting_monthly_autosave()) {
-        game_file_write_saved_game("last.sav");
+        game_file_write_saved_game("autosave.sav");
     }
 }
 
@@ -120,7 +120,7 @@ static void advance_tick(void)
     // 0, 9, 11, 13, 14, 15, 26, 41, 42, 47
     switch (game_time_tick()) {
         case 1: city_gods_calculate_moods(1); break;
-        case 2: sound_music_update(); break;
+        case 2: sound_music_update(0); break;
         case 3: widget_minimap_invalidate(); break;
         case 4: city_emperor_update(); break;
         case 5: formation_update_all(0); break;
@@ -167,11 +167,14 @@ static void advance_tick(void)
 
 void game_tick_run(void)
 {
+    if (editor_is_active()) {
+        random_generate_next(); // update random to randomize native huts
+        figure_action_handle(); // just update the flag figures
+        return;
+    }
     random_generate_next();
     game_undo_reduce_time_available();
-    if (!editor_is_active()) {
-        advance_tick();
-    }
+    advance_tick();
     figure_action_handle();
     scenario_earthquake_process();
     scenario_gladiator_revolt_process();

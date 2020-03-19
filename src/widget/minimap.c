@@ -199,11 +199,13 @@ static void draw_minimap_tile(int x_view, int y_view, int grid_offset)
 static void draw_viewport_rectangle(void)
 {
     int camera_x, camera_y;
+    int camera_pixels_x, camera_pixels_y;
     city_view_get_camera(&camera_x, &camera_y);
+    city_view_get_pixel_offset(&camera_pixels_x, &camera_pixels_y);
     int view_width_tiles, view_height_tiles;
     city_view_get_viewport_size_tiles(&view_width_tiles, &view_height_tiles);
 
-    int x_offset = data.x_offset + 2 * (camera_x - data.absolute_x) - 2;
+    int x_offset = data.x_offset + 2 * (camera_x - data.absolute_x) - 2 + camera_pixels_x / 30;
     if (x_offset < data.x_offset) {
         x_offset = data.x_offset;
     }
@@ -249,7 +251,7 @@ static void draw_uncached(int x_offset, int y_offset, int width_tiles, int heigh
 
 void draw_using_cache(int x_offset, int y_offset, int width_tiles, int height_tiles, int is_scrolling)
 {
-    if (width_tiles * 2 != data.width || height_tiles != data.height) {
+    if (width_tiles * 2 != data.width || height_tiles != data.height || x_offset != data.x_offset) {
         draw_uncached(x_offset, y_offset, width_tiles, height_tiles);
         return;
     }

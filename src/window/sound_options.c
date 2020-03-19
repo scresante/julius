@@ -23,12 +23,12 @@ static void arrow_button_effects(int is_down, int param2);
 static void arrow_button_city(int is_down, int param2);
 
 static generic_button buttons[] = {
-    {64, 162, 288, 182, GB_IMMEDIATE, button_toggle, button_none, SOUND_MUSIC, 0},
-    {64, 192, 288, 212, GB_IMMEDIATE, button_toggle, button_none, SOUND_SPEECH, 0},
-    {64, 222, 288, 242, GB_IMMEDIATE, button_toggle, button_none, SOUND_EFFECTS, 0},
-    {64, 252, 288, 272, GB_IMMEDIATE, button_toggle, button_none, SOUND_CITY, 0},
-    {144, 296, 336, 316, GB_IMMEDIATE, button_ok, button_none, 1, 0},
-    {144, 296, 336, 346, GB_IMMEDIATE, button_cancel, button_none, 1, 0},
+    {64, 162, 224, 20, button_toggle, button_none, SOUND_MUSIC, 0},
+    {64, 192, 224, 20, button_toggle, button_none, SOUND_SPEECH, 0},
+    {64, 222, 224, 20, button_toggle, button_none, SOUND_EFFECTS, 0},
+    {64, 252, 224, 20, button_toggle, button_none, SOUND_CITY, 0},
+    {144, 296, 192, 20, button_ok, button_none, 1, 0},
+    {144, 326, 192, 20, button_cancel, button_none, 1, 0},
 };
 
 static arrow_button arrow_buttons[] = {
@@ -125,8 +125,7 @@ static void button_toggle(int type, int param2)
     setting_toggle_sound_enabled(type);
     if (type == SOUND_MUSIC) {
         if (setting_sound(SOUND_MUSIC)->enabled) {
-            sound_music_reset();
-            sound_music_update();
+            sound_music_update(1);
         } else {
             sound_music_stop();
         }
@@ -149,8 +148,9 @@ static void button_cancel(int param1, int param2)
     setting_reset_sound(SOUND_SPEECH, data.original_speech.enabled, data.original_speech.volume);
     setting_reset_sound(SOUND_CITY, data.original_city.enabled, data.original_city.volume);
     if (data.original_music.enabled) {
-        sound_music_reset();
-        sound_music_update();
+        if (setting_sound_is_enabled(SOUND_MUSIC) != data.original_music.enabled) {
+            sound_music_update(1);
+        }
     } else {
         sound_music_stop();
     }
@@ -199,7 +199,7 @@ void window_sound_options_show(void (*close_callback)(void))
 {
     window_type window = {
         WINDOW_SOUND_OPTIONS,
-        0,
+        window_draw_underlying_window,
         draw_foreground,
         handle_mouse,
     };

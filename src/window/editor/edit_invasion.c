@@ -25,13 +25,13 @@ static void button_delete(int param1, int param2);
 static void button_save(int param1, int param2);
 
 static generic_button buttons[] = {
-    {30, 152, 90, 177, GB_IMMEDIATE, button_year, button_none},
-    {200, 152, 280, 177, GB_IMMEDIATE, button_amount, button_none},
-    {320, 152, 520, 177, GB_IMMEDIATE, button_type, button_none},
-    {130, 190, 320, 215, GB_IMMEDIATE, button_from, button_none},
-    {340, 190, 560, 215, GB_IMMEDIATE, button_attack, button_none},
-    {20, 230, 270, 255, GB_IMMEDIATE, button_delete, button_none},
-    {310, 230, 410, 255, GB_IMMEDIATE, button_save, button_none},
+    {30, 152, 60, 25, button_year, button_none},
+    {200, 152, 80, 25, button_amount, button_none},
+    {320, 152, 200, 25, button_type, button_none},
+    {130, 190, 190, 25, button_from, button_none},
+    {340, 190, 220, 25, button_attack, button_none},
+    {20, 230, 250, 25, button_delete, button_none},
+    {310, 230, 100, 25, button_save, button_none},
 };
 
 static struct {
@@ -88,7 +88,7 @@ static void draw_foreground(void)
 
 static void handle_mouse(const mouse *m)
 {
-    if (m->right.went_down) {
+    if (m->right.went_up) {
         button_save(0, 0);
     } else {
         generic_buttons_handle_mouse(mouse_in_dialog(m), 0, 0, buttons, 7, &data.focus_button_id);
@@ -110,7 +110,7 @@ static void set_amount(int value)
 }
 static void button_amount(int param1, int param2)
 {
-    window_numeric_input_show(screen_dialog_offset_x() + 60, screen_dialog_offset_y() + 50, 3, 120, set_amount);
+    window_numeric_input_show(screen_dialog_offset_x() + 60, screen_dialog_offset_y() + 50, 3, 200, set_amount);
 }
 
 static void set_type(int value)

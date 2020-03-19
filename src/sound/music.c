@@ -59,12 +59,12 @@ static void play_track(int track)
     if (track <= TRACK_NONE || track >= TRACK_MAX) {
         return;
     }
-    const char* mp3_track = dir_get_case_corrected_file(mp3_tracks[track]);
+    const char *mp3_track = dir_get_file(mp3_tracks[track], NOT_LOCALIZED);
 
-    if (!mp3_track || !sound_device_play_music(mp3_track)) {
-        sound_device_play_music(dir_get_case_corrected_file(tracks[track]));
+    int volume = setting_sound(SOUND_MUSIC)->volume;
+    if (!mp3_track || !sound_device_play_music(mp3_track, volume)) {
+        sound_device_play_music(dir_get_file(tracks[track], NOT_LOCALIZED), volume);
     }
-    sound_music_set_volume(setting_sound(SOUND_MUSIC)->volume);
     data.current_track = track;
 }
 
@@ -75,15 +75,16 @@ void sound_music_play_intro(void)
     }
 }
 
-void sound_music_reset(void)
+void sound_music_play_editor(void)
 {
-    data.current_track = TRACK_NONE;
-    data.next_check = 0;
+    if (setting_sound(SOUND_MUSIC)->enabled) {
+        play_track(TRACK_CITY_1);
+    }
 }
 
-void sound_music_update(void)
+void sound_music_update(int force)
 {
-    if (data.next_check) {
+    if (data.next_check && !force) {
         --data.next_check;
         return;
     }
@@ -121,4 +122,5 @@ void sound_music_stop(void)
 {
     sound_device_stop_music();
     data.current_track = TRACK_NONE;
+    data.next_check = 0;
 }

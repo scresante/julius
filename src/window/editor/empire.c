@@ -30,7 +30,7 @@ static arrow_button arrow_buttons_empire[] = {
     {32, 48, 15, 24, button_change_empire, 0, 0}
 };
 static generic_button generic_button_ok[] = {
-    {84, 48, 184, 72, GB_IMMEDIATE, button_ok, button_none, 0, 0}
+    {84, 48, 100, 24, button_ok, button_none, 0, 0}
 };
 
 static struct {
@@ -290,8 +290,7 @@ static int is_outside_map(int x, int y)
 
 static void determine_selected_object(const mouse *m)
 {
-    int left_button_pressed = (!m->is_touch && m->left.went_down) || (m->is_touch && m->left.went_up);
-    if (!left_button_pressed || data.finished_scroll || is_outside_map(m->x, m->y)) {
+    if (!m->left.went_up || data.finished_scroll || is_outside_map(m->x, m->y)) {
         data.finished_scroll = 0;
         return;
     }
@@ -304,7 +303,7 @@ static void handle_mouse(const mouse *m)
     if (m->is_touch) {
         const touch *t = get_earliest_touch();
         if (!is_outside_map(t->current_point.x, t->current_point.y)) {
-            view_tile position;
+            pixel_offset position;
             if (t->has_started) {
                 data.is_scrolling = 1;
                 empire_get_scroll(&position.x, &position.y);
@@ -323,8 +322,9 @@ static void handle_mouse(const mouse *m)
             scroll_end_touch_drag();
         }
     }
-    if (!empire_scroll_map(scroll_get_direction(m))) {
-        view_tile position;
+    pixel_offset position;
+    scroll_get_delta(m, &position, SCROLL_TYPE_EMPIRE);
+    if (!empire_scroll_map(position.x, position.y)) {
         if (scroll_decay(&position)) {
             empire_set_scroll(position.x, position.y);
         }
@@ -333,7 +333,7 @@ static void handle_mouse(const mouse *m)
     if (!arrow_buttons_handle_mouse(m, data.x_min + 20, data.y_max - 100, arrow_buttons_empire, 2)) {
         if (!generic_buttons_handle_mouse(m, data.x_min + 20, data.y_max - 100, generic_button_ok, 1, &data.focus_button_id)) {
             determine_selected_object(m);
-            if (m->right.went_down) {
+            if (m->right.went_up) {
                 empire_clear_selected_object();
                 window_invalidate();
             }

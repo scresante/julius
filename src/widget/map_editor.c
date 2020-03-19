@@ -11,6 +11,7 @@
 #include "map/point.h"
 #include "map/property.h"
 #include "sound/city.h"
+#include "sound/effect.h"
 #include "widget/city_figure.h"
 #include "widget/map_editor_tool.h"
 
@@ -103,27 +104,35 @@ void widget_map_editor_draw(void)
 
 static void update_city_view_coords(const mouse *m, map_tile *tile)
 {
-    tile->grid_offset = city_view_pixels_to_grid_offset(m->x, m->y);
-    if (tile->grid_offset) {
+    view_tile view;
+    if (city_view_pixels_to_view_tile(m->x, m->y, &view)) {
+        tile->grid_offset = city_view_tile_to_grid_offset(&view);
+        city_view_set_selected_view_tile(&view);
         tile->x = map_grid_offset_to_x(tile->grid_offset);
         tile->y = map_grid_offset_to_y(tile->grid_offset);
     } else {
-        tile->x = tile->y = 0;
+        tile->grid_offset = tile->x = tile->y = 0;
     }
 }
 
-static void scroll_map(int direction)
+static void scroll_map(const mouse *m)
 {
-    if (city_view_scroll(direction)) {
+    pixel_offset delta;
+    scroll_get_delta(m, &delta, SCROLL_TYPE_CITY);
+    if (city_view_scroll(delta.x, delta.y)) {
         sound_city_decay_views();
     }
 }
 
 void widget_map_editor_handle_mouse(const mouse *m)
 {
-    scroll_map(scroll_get_direction(m));
+    scroll_map(m);
     map_tile *tile = &data.current_tile;
     update_city_view_coords(m, tile);
+
+    if (!tile->grid_offset) {
+        return;
+    }
 
     if (m->left.went_down) {
         editor_tool_start_use(tile);
@@ -133,8 +142,9 @@ void widget_map_editor_handle_mouse(const mouse *m)
     }
     if (m->left.went_up) {
         editor_tool_end_use(tile);
+        sound_effect_play(SOUND_EFFECT_BUILD);
     }
-    if (m->right.went_down) {
+    if (m->right.went_up) {
         editor_tool_deactivate();
     }
 }

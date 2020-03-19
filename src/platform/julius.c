@@ -1,5 +1,6 @@
 #include "SDL.h"
 
+#include "core/backtrace.h"
 #include "core/encoding.h"
 #include "core/file.h"
 #include "core/lang.h"
@@ -8,6 +9,7 @@
 #include "input/mouse.h"
 #include "platform/arguments.h"
 #include "platform/cursor.h"
+#include "platform/file_manager.h"
 #include "platform/keyboard_input.h"
 #include "platform/prefs.h"
 #include "platform/screen.h"
@@ -35,18 +37,6 @@
 #include <string.h>
 #endif
 
-#if defined(__GNUC__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && !defined(__vita__) && !defined(__SWITCH__)
-#include <execinfo.h>
-#endif
-
-#ifdef _MSC_VER
-#include <direct.h>
-#define chdir _chdir
-#define getcwd _getcwd
-#elif !defined(__vita__)
-#include <unistd.h>
-#endif
-
 #ifdef DRAW_FPS
 #include "graphics/window.h"
 #include "graphics/graphics.h"
@@ -68,20 +58,10 @@ enum {
     USER_EVENT_CENTER_WINDOW,
 };
 
-static void handler(int sig) {
-#if defined(__GNUC__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && !defined(__vita__) && !defined(__SWITCH__)
-    void *array[100];
-    size_t size;
-
-    // get void*'s for all entries on the stack
-    size = backtrace(array, 100);
-
-    // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
-#else
+static void handler(int sig)
+{
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Oops, crashed with signal %d :(", sig);
-#endif
+    backtrace_print();
     exit(1);
 }
 
@@ -215,6 +195,7 @@ static void handle_mouse_button(SDL_MouseButtonEvent *event, int is_down)
     }
 }
 
+#ifndef __SWITCH__
 static void handle_window_event(SDL_WindowEvent *event, int *window_active)
 {
     switch (event->event) {
@@ -225,27 +206,28 @@ static void handle_window_event(SDL_WindowEvent *event, int *window_active)
             mouse_set_inside_window(0);
             break;
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-            SDL_Log("Window resized to %d x %d", event->data1, event->data2);
+            SDL_Log("Window resized to %d x %d", (int) event->data1, (int) event->data2);
             platform_screen_resize(event->data1, event->data2);
             break;
         case SDL_WINDOWEVENT_RESIZED:
-            SDL_Log("System resize to %d x %d", event->data1, event->data2);
+            SDL_Log("System resize to %d x %d", (int) event->data1, (int) event->data2);
             break;
         case SDL_WINDOWEVENT_MOVED:
-            SDL_Log("Window move to coordinates x: %d y: %d\n", event->data1, event->data2);
+            SDL_Log("Window move to coordinates x: %d y: %d\n", (int) event->data1, (int) event->data2);
             platform_screen_move(event->data1, event->data2);
             break;
 
         case SDL_WINDOWEVENT_SHOWN:
-            SDL_Log("Window %d shown", event->windowID);
+            SDL_Log("Window %d shown", (unsigned int) event->windowID);
             *window_active = 1;
             break;
         case SDL_WINDOWEVENT_HIDDEN:
-            SDL_Log("Window %d hidden", event->windowID);
+            SDL_Log("Window %d hidden", (unsigned int) event->windowID);
             *window_active = 0;
             break;
     }
 }
+#endif
 
 static void handle_event(SDL_Event *event, int *active, int *quit)
 {
@@ -257,6 +239,9 @@ static void handle_event(SDL_Event *event, int *active, int *quit)
 #endif
         case SDL_KEYDOWN:
             platform_handle_key_down(&event->key);
+            break;
+        case SDL_KEYUP:
+            platform_handle_key_up(&event->key);
             break;
         case SDL_TEXTINPUT:
             platform_handle_text(&event->text);
@@ -329,13 +314,11 @@ static void main_loop(void)
         vita_finish_simulated_mouse_clicks();
         vita_handle_analog_sticks();
         vita_handle_virtual_keyboard();
-        vita_handle_repeat_keys();
         while (vita_poll_event(&event)) {
 #elif defined(__SWITCH__)
         switch_finish_simulated_mouse_clicks();
         switch_handle_analog_sticks();
         switch_handle_virtual_keyboard();
-        switch_handle_repeat_keys();
         while (switch_poll_event(&event)) {
 #else
         while (SDL_PollEvent(&event)) {
@@ -382,7 +365,7 @@ static int init_sdl(void)
 static const char* ask_for_data_dir(int again)
 {
     if (again) {
-        int result = tinyfd_messageBox("Wrong folder selected.",
+        int result = tinyfd_messageBox("Wrong folder selected",
             "The selected folder is not a proper Caesar 3 folder.\n\n"
             "Press OK to select another folder or Cancel to exit.",
             "okcancel", "warning", 1);
@@ -398,7 +381,7 @@ static int pre_init(const char *custom_data_dir)
 {
     if (custom_data_dir) {
         SDL_Log("Loading game from %s", custom_data_dir);
-        if (chdir(custom_data_dir) != 0) {
+        if (!platform_file_manager_set_base_path(custom_data_dir)) {
             SDL_Log("%s: directory not found", custom_data_dir);
             return 0;
         }
@@ -413,7 +396,7 @@ static int pre_init(const char *custom_data_dir)
     #if SDL_VERSION_ATLEAST(2, 0, 1)
         char *base_path = SDL_GetBasePath();
         if (base_path) {
-            if (chdir(base_path) == 0) {
+            if (platform_file_manager_set_base_path(base_path)) {
                 SDL_Log("Loading game from base path %s", base_path);
                 if (game_pre_init()) {
                     SDL_free(base_path);
@@ -428,7 +411,7 @@ static int pre_init(const char *custom_data_dir)
         const char *user_dir = pref_data_dir();
         if (user_dir) {
             SDL_Log("Loading game from user pref %s", user_dir);
-            if (chdir(user_dir) == 0 && game_pre_init()) {
+            if (platform_file_manager_set_base_path(user_dir) && game_pre_init()) {
                 return 1;
             }
         }
@@ -436,7 +419,7 @@ static int pre_init(const char *custom_data_dir)
         user_dir = ask_for_data_dir(0);
         while (user_dir) {
             SDL_Log("Loading game from user-selected dir %s", user_dir);
-            if (chdir(user_dir) == 0 && game_pre_init()) {
+            if (platform_file_manager_set_base_path(user_dir) && game_pre_init()) {
                 pref_save_data_dir(user_dir);
                 return 1;
             }
@@ -488,15 +471,11 @@ static void setup(const julius_args *args)
     // this has to come after platform_screen_create, otherwise it fails on Nintendo Switch
     platform_init_cursors(args->cursor_scale_percentage);
 
-    int game_init_result = game_init();
-    if (game_init_result == GAME_INIT_ERROR) {
+    time_set_millis(SDL_GetTicks());
+
+    if (!game_init()) {
         SDL_Log("Exiting: game init failed");
         exit(2);
-    } else if (game_init_result == GAME_INIT_NO_PATCH) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,
-            "Your Caesar 3 installation does not have the 1.0.1.0 patch installed.",
-            "Continue at your own risk.",
-            NULL);
     }
 }
 

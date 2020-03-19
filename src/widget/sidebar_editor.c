@@ -21,8 +21,6 @@
 #include "window/editor/map.h"
 
 #define SIDEBAR_WIDTH 162
-#define SIDEBAR_BORDER ((screen_width() + 20) % 60)
-#define BOTTOM_BORDER ((screen_height() - 24) % 15)
 
 static void button_build_tool(int tool, int param2);
 static void button_build_menu(int submenu, int param2);
@@ -30,29 +28,28 @@ static void button_build_menu(int submenu, int param2);
 static void button_attributes(int show, int param2);
 
 static image_button buttons_build[] = {
-    {7, 123, 71, 23, IB_NORMAL, 137, 45, button_attributes, button_none, 0, 0, 1},
-    {84, 123, 71, 23, IB_NORMAL, 137, 48, button_attributes, button_none, 1, 0, 1},
-    {13, 267, 39, 26, IB_NORMAL, 137, 0, button_build_tool, button_none, TOOL_GRASS, 0, 1},
-    {63, 267, 39, 26, IB_NORMAL, 137, 3, button_build_tool, button_none, TOOL_TREES, 0, 1},
-    {113, 267, 39, 26, IB_NORMAL, 137, 6, button_build_tool, button_none, TOOL_WATER, 0, 1},
-    {13, 303, 39, 26, IB_BUILD, 137, 21, button_build_menu, button_none, MENU_ELEVATION, 0, 1},
-    {63, 303, 39, 26, IB_NORMAL, 137, 12, button_build_tool, button_none, TOOL_SHRUB, 0, 1},
-    {113, 303, 39, 26, IB_NORMAL, 137, 15, button_build_tool, button_none, TOOL_ROCKS, 0, 1},
-    {13, 339, 39, 26, IB_NORMAL, 137, 18, button_build_tool, button_none, TOOL_MEADOW, 0, 1},
-    {63, 339, 39, 26, IB_NORMAL, 137, 30, button_build_tool, button_none, TOOL_ROAD, 0, 1},
-    {113, 339, 39, 26, IB_BUILD, 137, 24, button_build_menu, button_none, MENU_BRUSH_SIZE, 0, 1},
-    {13, 375, 39, 26, IB_NORMAL, 137, 9, button_build_tool, button_none, TOOL_EARTHQUAKE_POINT, 0, 1},
-    {63, 375, 39, 26, IB_BUILD, 137, 39, button_build_menu, button_none, MENU_INVASION_POINTS, 0, 1},
-    {113, 375, 39, 26, IB_BUILD, 137, 42, button_build_menu, button_none, MENU_PEOPLE_POINTS, 0, 1},
-    {13, 411, 39, 26, IB_BUILD, 137, 33, button_build_menu, button_none, MENU_RIVER_POINTS, 0, 1},
-    {63, 411, 39, 26, IB_BUILD, 137, 27, button_build_menu, button_none, MENU_NATIVE_BUILDINGS, 0, 1},
-    {113, 411, 39, 26, IB_BUILD, 137, 51, button_build_menu, button_none, MENU_ANIMAL_POINTS, 0, 1},
+    {7, 123, 71, 23, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 45, button_attributes, button_none, 0, 0, 1},
+    {84, 123, 71, 23, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 48, button_attributes, button_none, 1, 0, 1},
+    {13, 267, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 0, button_build_tool, button_none, TOOL_GRASS, 0, 1},
+    {63, 267, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 3, button_build_tool, button_none, TOOL_TREES, 0, 1},
+    {113, 267, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 6, button_build_tool, button_none, TOOL_WATER, 0, 1},
+    {13, 303, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 21, button_build_menu, button_none, MENU_ELEVATION, 0, 1},
+    {63, 303, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 12, button_build_tool, button_none, TOOL_SHRUB, 0, 1},
+    {113, 303, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 15, button_build_tool, button_none, TOOL_ROCKS, 0, 1},
+    {13, 339, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 18, button_build_tool, button_none, TOOL_MEADOW, 0, 1},
+    {63, 339, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 30, button_build_tool, button_none, TOOL_ROAD, 0, 1},
+    {113, 339, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 24, button_build_menu, button_none, MENU_BRUSH_SIZE, 0, 1},
+    {13, 375, 39, 26, IB_NORMAL, GROUP_EDITOR_SIDEBAR_BUTTONS, 9, button_build_tool, button_none, TOOL_EARTHQUAKE_POINT, 0, 1},
+    {63, 375, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 39, button_build_menu, button_none, MENU_INVASION_POINTS, 0, 1},
+    {113, 375, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 42, button_build_menu, button_none, MENU_PEOPLE_POINTS, 0, 1},
+    {13, 411, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 33, button_build_menu, button_none, MENU_RIVER_POINTS, 0, 1},
+    {63, 411, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 27, button_build_menu, button_none, MENU_NATIVE_BUILDINGS, 0, 1},
+    {113, 411, 39, 26, IB_BUILD, GROUP_EDITOR_SIDEBAR_BUTTONS, 51, button_build_menu, button_none, MENU_ANIMAL_POINTS, 0, 1},
 };
 
 static int get_x_offset(void)
 {
-    int s_width = screen_width();
-    return (s_width - (s_width + 20) % 60 - SIDEBAR_WIDTH);
+    return screen_width() - SIDEBAR_WIDTH;
 }
 
 static void draw_minimap(int force)
@@ -109,7 +106,7 @@ static void draw_status(void)
 
     entry = scenario_map_river_entry();
     exit = scenario_map_river_exit();
-    if (entry.x != -1 || entry.x != -1) {
+    if (entry.x != -1 || exit.x != -1) {
         if (entry.x == -1) {
             lang_text_draw(44, 137, text_offset, 239, FONT_NORMAL_RED);
         } else if (exit.x == -1) {
@@ -143,7 +140,7 @@ static void draw_status(void)
     }
 }
 
-static void draw_sidebar(void)
+void widget_sidebar_editor_draw_background(void)
 {
     int image_base = image_group(GROUP_EDITOR_SIDE_PANEL);
     int x_offset = get_x_offset();
@@ -154,7 +151,7 @@ static void draw_sidebar(void)
 
     // relief images below panel
     int y_offset = 474;
-    int y_max = screen_height() - BOTTOM_BORDER;
+    int y_max = screen_height();
     while (y_offset < y_max) {
         if (y_max - y_offset <= 120) {
             image_draw(image_base + 1, x_offset, y_offset);
@@ -164,39 +161,6 @@ static void draw_sidebar(void)
             y_offset += 285;
         }
     }
-}
-
-static void draw_filler_borders(void)
-{
-    int border_right_width = SIDEBAR_BORDER;
-    if (border_right_width) {
-        int image_id = image_group(GROUP_TOP_MENU_SIDEBAR) + 13;
-        if (border_right_width > 24) {
-            // larger border
-            image_id -= 1;
-        }
-        if (border_right_width > 40) {
-            int x_offset = screen_width() - 35;
-            int y_max = screen_height();
-            for (int y_offset = 24; y_offset < y_max; y_offset += 24) {
-                image_draw(image_id, x_offset, y_offset);
-            }
-        }
-        int x_offset = screen_width() - border_right_width;
-        int y_max = screen_height();
-        for (int y_offset = 24; y_offset < y_max; y_offset += 24) {
-            image_draw(image_id, x_offset, y_offset);
-        }
-    }
-
-    int border_bottom_height = BOTTOM_BORDER;
-    graphics_fill_rect(0, screen_height() - border_bottom_height, screen_width(), border_bottom_height, COLOR_BLACK);
-}
-
-void widget_sidebar_editor_draw_background(void)
-{
-    draw_sidebar();
-    draw_filler_borders();
 }
 
 void widget_sidebar_editor_draw_foreground(void)

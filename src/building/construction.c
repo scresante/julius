@@ -14,6 +14,7 @@
 #include "city/view.h"
 #include "city/warning.h"
 #include "core/calc.h"
+#include "core/config.h"
 #include "core/image.h"
 #include "core/time.h"
 #include "figure/formation.h"
@@ -48,6 +49,7 @@ enum {
 
 static struct {
     building_type type;
+    building_type sub_type;
     int in_progress;
     map_tile start;
     map_tile end;
@@ -199,7 +201,9 @@ static int place_reservoir_and_aqueducts(int measure_only, int x_start, int y_st
         return 0;
     }
     if (!distance) {
-        info->cost = model_get_building(BUILDING_RESERVOIR)->cost;
+        if (info->place_reservoir_at_end == PLACE_RESERVOIR_YES) {
+            info->cost = model_get_building(BUILDING_RESERVOIR)->cost;
+        }
         return 1;
     }
     if (!map_routing_calculate_distances_for_building(ROUTED_BUILDING_AQUEDUCT, x_start, y_start)) {
@@ -259,6 +263,7 @@ static int place_reservoir_and_aqueducts(int measure_only, int x_start, int y_st
 void building_construction_set_type(building_type type)
 {
     data.type = type;
+    data.sub_type = BUILDING_NONE;
     data.in_progress = 0;
     data.start.x = 0;
     data.start.y = 0;
@@ -301,6 +306,12 @@ void building_construction_set_type(building_type type)
             case BUILDING_TOWER:
                 data.required_terrain.wall = 1;
                 break;
+            case BUILDING_MENU_SMALL_TEMPLES:
+                data.sub_type = BUILDING_SMALL_TEMPLE_CERES;
+                break;
+            case BUILDING_MENU_LARGE_TEMPLES:
+                data.sub_type = BUILDING_LARGE_TEMPLE_CERES;
+                break;
             default:
                 break;
         }
@@ -310,17 +321,40 @@ void building_construction_set_type(building_type type)
 void building_construction_clear_type(void)
 {
     data.cost = 0;
+    data.sub_type = BUILDING_NONE;
     data.type = BUILDING_NONE;
 }
 
 building_type building_construction_type(void)
 {
-    return data.type;
+    return data.sub_type ? data.sub_type : data.type;
 }
 
 int building_construction_cost(void)
 {
     return data.cost;
+}
+
+int building_construction_size(int *x, int *y)
+{
+    if (!config_get(CONFIG_UI_SHOW_CONSTRUCTION_SIZE) ||
+        !building_construction_is_updatable() ||
+        (data.type != BUILDING_CLEAR_LAND && !data.cost)) {
+        return 0;
+    }
+    int size_x = data.end.x - data.start.x;
+    int size_y = data.end.y - data.start.y;
+    if (size_x < 0) {
+        size_x = -size_x;
+    }
+    if (size_y < 0) {
+        size_y = -size_y;
+    }
+    size_x++;
+    size_y++;
+    *x = size_x;
+    *y = size_y;
+    return 1;
 }
 
 int building_construction_in_progress(void)
@@ -381,7 +415,7 @@ void building_construction_cancel(void)
 
 void building_construction_update(int x, int y, int grid_offset)
 {
-    building_type type = data.type;
+    building_type type = data.sub_type ? data.sub_type : data.type;
     if (grid_offset) {
         data.end.x = x;
         data.end.y = y;
@@ -502,7 +536,7 @@ void building_construction_place(void)
     int y_start = data.start.y;
     int x_end = data.end.x;
     int y_end = data.end.y;
-    building_type type = data.type;
+    building_type type = data.sub_type ? data.sub_type : data.type;
     building_construction_warning_reset();
     if (!type) {
         return;
@@ -547,6 +581,7 @@ void building_construction_place(void)
             items_placed = last_items_cleared;
         }
         placement_cost *= items_placed;
+        map_property_clear_constructing_and_deleted();
     } else if (type == BUILDING_WALL) {
         placement_cost *= building_construction_place_wall(0, x_start, y_start, x_end, y_end);
     } else if (type == BUILDING_ROAD) {
@@ -611,6 +646,18 @@ void building_construction_place(void)
     }
     if ((type >= BUILDING_LARGE_TEMPLE_CERES && type <= BUILDING_LARGE_TEMPLE_VENUS) || type == BUILDING_ORACLE) {
         building_warehouses_remove_resource(RESOURCE_MARBLE, 2);
+    }
+    if (data.type == BUILDING_MENU_SMALL_TEMPLES) {
+        data.sub_type++;
+        if (data.sub_type > BUILDING_SMALL_TEMPLE_VENUS) {
+            data.sub_type = BUILDING_SMALL_TEMPLE_CERES;
+        }
+    }
+    if (data.type == BUILDING_MENU_LARGE_TEMPLES) {
+        data.sub_type++;
+        if (data.sub_type > BUILDING_LARGE_TEMPLE_VENUS) {
+            data.sub_type = BUILDING_LARGE_TEMPLE_CERES;
+        }
     }
     formation_move_herds_away(x_end, y_end);
     city_finance_process_construction(placement_cost);

@@ -4,6 +4,7 @@
 #include "core/dir.h"
 #include "core/encoding.h"
 #include "core/file.h"
+#include "core/image_group.h"
 #include "core/lang.h"
 #include "core/string.h"
 #include "core/time.h"
@@ -18,6 +19,7 @@
 #include "graphics/text.h"
 #include "graphics/window.h"
 #include "input/keyboard.h"
+#include "widget/input_box.h"
 #include "window/city.h"
 #include "window/editor/map.h"
 
@@ -28,28 +30,29 @@ static void button_scroll(int is_down, int num_lines);
 static void button_select_file(int index, int param2);
 
 static image_button image_buttons[] = {
-    {344, 335, 34, 34, IB_NORMAL, 96, 0, button_ok_cancel, button_none, 1, 0, 1},
-    {392, 335, 34, 34, IB_NORMAL, 96, 4, button_ok_cancel, button_none, 0, 0, 1},
-    {464, 120, 34, 34, IB_SCROLL, 96, 8, button_scroll, button_none, 0, 1, 1},
-    {464, 300, 34, 34, IB_SCROLL, 96, 12, button_scroll, button_none, 1, 1, 1},
+    {344, 335, 39, 26, IB_NORMAL, GROUP_OK_CANCEL_SCROLL_BUTTONS, 0, button_ok_cancel, button_none, 1, 0, 1},
+    {392, 335, 39, 26, IB_NORMAL, GROUP_OK_CANCEL_SCROLL_BUTTONS, 4, button_ok_cancel, button_none, 0, 0, 1},
+    {464, 120, 39, 26, IB_SCROLL, GROUP_OK_CANCEL_SCROLL_BUTTONS, 8, button_scroll, button_none, 0, 1, 1},
+    {464, 300, 39, 26, IB_SCROLL, GROUP_OK_CANCEL_SCROLL_BUTTONS, 12, button_scroll, button_none, 1, 1, 1},
 };
 static generic_button file_buttons[] = {
-    {160, 128, 448, 144, GB_IMMEDIATE, button_select_file, button_none, 0, 0},
-    {160, 144, 448, 160, GB_IMMEDIATE, button_select_file, button_none, 1, 0},
-    {160, 160, 448, 176, GB_IMMEDIATE, button_select_file, button_none, 2, 0},
-    {160, 176, 448, 192, GB_IMMEDIATE, button_select_file, button_none, 3, 0},
-    {160, 192, 448, 208, GB_IMMEDIATE, button_select_file, button_none, 4, 0},
-    {160, 208, 448, 224, GB_IMMEDIATE, button_select_file, button_none, 5, 0},
-    {160, 224, 448, 240, GB_IMMEDIATE, button_select_file, button_none, 6, 0},
-    {160, 240, 448, 256, GB_IMMEDIATE, button_select_file, button_none, 7, 0},
-    {160, 256, 448, 272, GB_IMMEDIATE, button_select_file, button_none, 8, 0},
-    {160, 272, 448, 288, GB_IMMEDIATE, button_select_file, button_none, 9, 0},
-    {160, 288, 448, 304, GB_IMMEDIATE, button_select_file, button_none, 10, 0},
-    {160, 304, 448, 320, GB_IMMEDIATE, button_select_file, button_none, 11, 0},
+    {160, 128, 288, 16, button_select_file, button_none, 0, 0},
+    {160, 144, 288, 16, button_select_file, button_none, 1, 0},
+    {160, 160, 288, 16, button_select_file, button_none, 2, 0},
+    {160, 176, 288, 16, button_select_file, button_none, 3, 0},
+    {160, 192, 288, 16, button_select_file, button_none, 4, 0},
+    {160, 208, 288, 16, button_select_file, button_none, 5, 0},
+    {160, 224, 288, 16, button_select_file, button_none, 6, 0},
+    {160, 240, 288, 16, button_select_file, button_none, 7, 0},
+    {160, 256, 288, 16, button_select_file, button_none, 8, 0},
+    {160, 272, 288, 16, button_select_file, button_none, 9, 0},
+    {160, 288, 288, 16, button_select_file, button_none, 10, 0},
+    {160, 304, 288, 16, button_select_file, button_none, 11, 0},
 };
 
 static const time_millis NOT_EXIST_MESSAGE_TIMEOUT = 500;
-static const int MAX_FILE_WINDOW_TEXT_WIDTH = 18 * 16;
+static const int MAX_FILE_WINDOW_TEXT_WIDTH = 18 * INPUT_BOX_BLOCK_SIZE;
+static input_box file_name_input = { 144, 80, 20, 2 };
 
 typedef struct {
     char extension[4];
@@ -72,6 +75,8 @@ static struct {
 file_type_data saved_game_data = {"sav"};
 file_type_data scenario_data = {"map"};
 
+static int double_click = 0;
+
 static void init(file_type type, file_dialog_type dialog_type)
 {
     data.type = type;
@@ -91,7 +96,7 @@ static void init(file_type type, file_dialog_type dialog_type)
     data.file_list = dir_find_files_with_extension(data.file_data->extension);
 
     strncpy(data.selected_file, data.file_data->last_loaded_file, FILE_NAME_MAX);
-    keyboard_start_capture(data.typed_name, FILE_NAME_MAX, 0, MAX_FILE_WINDOW_TEXT_WIDTH, FONT_NORMAL_WHITE);
+    keyboard_start_capture(data.typed_name, FILE_NAME_MAX, 0, &file_name_input, FONT_NORMAL_WHITE);
 }
 
 static void draw_scrollbar_dot(void)
@@ -116,7 +121,7 @@ static void draw_foreground(void)
     uint8_t file[FILE_NAME_MAX];
 
     outer_panel_draw(128, 40, 24, 21);
-    inner_panel_draw(144, 80, 20, 2);
+    input_box_draw(&file_name_input);
     inner_panel_draw(144, 120, 20, 13);
 
     // title
@@ -173,6 +178,7 @@ static int handle_scrollbar(const mouse *m)
 
 static void handle_mouse(const mouse *m)
 {
+    double_click = m->left.double_click;
     if (m->scrolled == SCROLL_DOWN) {
         button_scroll(1, 3);
     } else if (m->scrolled == SCROLL_UP) {
@@ -184,11 +190,15 @@ static void handle_mouse(const mouse *m)
         return;
     }
 
-    if (m->right.went_down) {
+    if (m->right.went_up) {
+        keyboard_stop_capture();
         window_go_back();
         return;
     }
     const mouse *m_dialog = mouse_in_dialog(m);
+    if (input_box_handle_mouse(m_dialog, &file_name_input)) {
+        return;
+    }
     if (!generic_buttons_handle_mouse(m_dialog, 0, 0, file_buttons, 12, &data.focus_button_id)) {
         if (!image_buttons_handle_mouse(m_dialog, 0, 0, image_buttons, 4, 0)) {
             handle_scrollbar(m);
@@ -223,24 +233,34 @@ static const char *get_chosen_filename(void)
 static void button_ok_cancel(int is_ok, int param2)
 {
     if (!is_ok) {
+        keyboard_stop_capture();
         window_go_back();
         return;
     }
 
     const char *filename = get_chosen_filename();
 
-    if (data.dialog_type != FILE_DIALOG_SAVE && !file_exists(filename)) {
+    if (data.dialog_type != FILE_DIALOG_SAVE && !file_exists(filename, NOT_LOCALIZED)) {
         data.message_not_exist_start_time = time_get_millis();
         return;
     }
     if (data.dialog_type == FILE_DIALOG_LOAD) {
-        keyboard_stop_capture();
         if (data.type == FILE_TYPE_SAVED_GAME) {
-            game_file_load_saved_game(filename);
-            window_city_show();
+            if (game_file_load_saved_game(filename)) {
+                keyboard_stop_capture();
+                window_city_show();
+            } else {
+                data.message_not_exist_start_time = time_get_millis();
+                return;
+            }
         } else if (data.type == FILE_TYPE_SCENARIO) {
-            game_file_editor_load_scenario(filename);
-            window_editor_map_show();
+            if (game_file_editor_load_scenario(filename)) {
+                keyboard_stop_capture();
+                window_editor_map_show();
+            } else {
+                data.message_not_exist_start_time = time_get_millis();
+                return;
+            }
         }
     } else if (data.dialog_type == FILE_DIALOG_SAVE) {
         keyboard_stop_capture();
@@ -287,11 +307,15 @@ static void button_scroll(int is_down, int num_lines)
 static void button_select_file(int index, int param2)
 {
     if (index < data.file_list->num_files) {
-        strncpy(data.selected_file, data.file_list->files[data.scroll_position + index], FILE_NAME_MAX);
+        strncpy(data.selected_file, data.file_list->files[data.scroll_position + index], FILE_NAME_MAX - 1);
         encoding_from_utf8(data.selected_file, data.typed_name, FILE_NAME_MAX);
         file_remove_extension(data.typed_name);
         keyboard_refresh();
         data.message_not_exist_start_time = 0;
+    }
+    if (data.dialog_type != FILE_DIALOG_DELETE && double_click) {
+        double_click = 0;
+        button_ok_cancel(1, 0);
     }
 }
 
@@ -299,7 +323,7 @@ void window_file_dialog_show(file_type type, file_dialog_type dialog_type)
 {
     window_type window = {
         WINDOW_FILE_DIALOG,
-        0,
+        window_draw_underlying_window,
         draw_foreground,
         handle_mouse
     };

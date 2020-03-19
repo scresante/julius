@@ -4,9 +4,11 @@
 #include "core/buffer.h"
 #include "core/calc.h"
 #include "core/io.h"
+#include "core/string.h"
 
 #define INF_SIZE 560
 #define MAX_PERSONAL_SAVINGS 100
+#define MAX_PLAYER_NAME 32
 
 static struct {
     // display settings
@@ -30,12 +32,12 @@ static struct {
     int victory_video;
     // persistent game state
     int last_advisor;
+    uint8_t player_name[MAX_PLAYER_NAME];
     // personal savings
     int personal_savings[MAX_PERSONAL_SAVINGS];
     // file data
     uint8_t inf_file[INF_SIZE];
 } data;
-
 
 static void load_default_settings(void)
 {
@@ -76,7 +78,7 @@ static void load_settings(buffer *buf)
     buffer_skip(buf, 6);
     data.game_speed = buffer_read_i32(buf);
     data.scroll_speed = buffer_read_i32(buf);
-    buffer_skip(buf, 32); //uint8_t player_name[32];
+    buffer_read_raw(buf, data.player_name, MAX_PLAYER_NAME);
     buffer_skip(buf, 16);
     data.last_advisor = buffer_read_i32(buf);
     buffer_skip(buf, 4); //int save_game_mission_id;
@@ -116,7 +118,7 @@ void settings_load(void)
 {
     load_default_settings();
 
-    int size = io_read_file_into_buffer("c3.inf", data.inf_file, INF_SIZE);
+    int size = io_read_file_into_buffer("c3.inf", NOT_LOCALIZED, data.inf_file, INF_SIZE);
     if (!size) {
         return;
     }
@@ -147,7 +149,7 @@ void settings_save(void)
     buffer_skip(buf, 6);
     buffer_write_i32(buf, data.game_speed);
     buffer_write_i32(buf, data.scroll_speed);
-    buffer_skip(buf, 32); //uint8_t player_name[32];
+    buffer_write_raw(buf, data.player_name, MAX_PLAYER_NAME);
     buffer_skip(buf, 16);
     buffer_write_i32(buf, data.last_advisor);
     buffer_skip(buf, 4); //int save_game_mission_id;
@@ -212,6 +214,11 @@ static set_sound *get_sound(set_sound_type type)
 const set_sound *setting_sound(set_sound_type type)
 {
     return get_sound(type);
+}
+
+int setting_sound_is_enabled(set_sound_type type)
+{
+    return get_sound(type)->enabled;
 }
 
 void setting_toggle_sound_enabled(set_sound_type type)
@@ -366,6 +373,16 @@ int setting_last_advisor(void)
 void setting_set_last_advisor(int advisor)
 {
     data.last_advisor = advisor;
+}
+
+const uint8_t *setting_player_name(void)
+{
+    return data.player_name;
+}
+
+void setting_set_player_name(const uint8_t *player_name)
+{
+    string_copy(player_name, data.player_name, MAX_PLAYER_NAME);
 }
 
 int setting_personal_savings_for_mission(int mission_id)

@@ -18,8 +18,8 @@ static void button_era(int param1, int param2);
 static void button_year(int param1, int param2);
 
 static generic_button buttons[] = {
-    {158, 100, 258, 130, GB_IMMEDIATE, button_era, button_none},
-    {278, 100, 398, 130, GB_IMMEDIATE, button_year, button_none},
+    {158, 100, 100, 30, button_era, button_none},
+    {278, 100, 120, 30, button_year, button_none},
 };
 
 static int focus_button_id;
@@ -50,7 +50,7 @@ static void draw_foreground(void)
 
 static void handle_mouse(const mouse *m)
 {
-    if (m->right.went_down) {
+    if (m->right.went_up) {
         window_editor_starting_conditions_show();
     } else {
         generic_buttons_handle_mouse(mouse_in_dialog(m), 0, 0, buttons, 2, &focus_button_id);

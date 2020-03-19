@@ -7,10 +7,13 @@
 typedef enum {
     WINDOW_LOGO,
     WINDOW_MAIN_MENU,
+    WINDOW_CONFIG,
     WINDOW_NEW_CAREER,
     WINDOW_CCK_SELECTION,
     WINDOW_FILE_DIALOG,
     WINDOW_POPUP_DIALOG,
+    WINDOW_PLAIN_MESSAGE_DIALOG,
+    WINDOW_INTRO_VIDEO,
     // mission start/end
     WINDOW_INTERMEZZO,
     WINDOW_MISSION_SELECTION,
@@ -94,6 +97,8 @@ void window_request_refresh(void);
 int window_is_invalid(void);
 
 void window_draw(int force);
+
+void window_draw_underlying_window(void);
 
 int window_is(window_id id);
 

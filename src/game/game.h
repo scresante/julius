@@ -1,17 +1,13 @@
 #ifndef GAME_GAME_H
 #define GAME_GAME_H
 
-enum {
-    GAME_INIT_ERROR = 0,
-    GAME_INIT_OK = 1,
-    GAME_INIT_NO_PATCH = 2
-};
-
 int game_pre_init(void);
 
 int game_init(void);
 
 int game_init_editor(void);
+
+int game_reload_language(void);
 
 void game_run(void);
 
